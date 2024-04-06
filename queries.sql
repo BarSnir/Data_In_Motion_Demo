@@ -277,3 +277,27 @@ INNER JOIN vehicles_extract ON
 INNER JOIN market_info_extract ON 
     vehicles_extract.MarketInfoId = market_info_extract.MarketInfoId;
 
+CREATE TABLE price_change_log (
+  `OrderId` String,
+  `CurrentPrice` INT,
+  `PrevPrice` INT,
+  PRIMARY KEY (`OrderId`) NOT ENFORCED
+) WITH (
+  'changelog.mode'='upsert',
+  'kafka.cleanup-policy'='compact',
+  'value.format' = 'avro-registry',
+  'scan.startup.mode' = 'earliest-offset'
+);
+
+
+INSERT INTO orders_extract (
+  `OrderId`,
+  `CurrentPrice`,
+  `PrevPrice`
+)
+SELECT 
+  Orders.after.OrderId,
+  Orders.after.Price AS CurrentPrice,
+  Orders.before.Price AS PrevPrice
+FROM Orders
+WHERE Orders.op = "u";
