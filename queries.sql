@@ -283,14 +283,14 @@ CREATE TABLE price_change_log (
   `PrevPrice` INT,
   PRIMARY KEY (`OrderId`) NOT ENFORCED
 ) WITH (
-  'changelog.mode'='upsert',
-  'kafka.cleanup-policy'='compact',
+  'changelog.mode'='append',
+  'kafka.cleanup-policy'='delete',
   'value.format' = 'avro-registry',
   'scan.startup.mode' = 'earliest-offset'
 );
 
 
-INSERT INTO orders_extract (
+INSERT INTO price_change_log (
   `OrderId`,
   `CurrentPrice`,
   `PrevPrice`
@@ -300,4 +300,14 @@ SELECT
   Orders.after.Price AS CurrentPrice,
   Orders.before.Price AS PrevPrice
 FROM Orders
-WHERE Orders.op = "u";
+WHERE Orders.op = 'u';
+
+
+SELECT 
+ OrderID,
+ FIRST_VALUE(PrevPrice) AS FirstPrice,
+ LAST_VALUE(PrevPrice) AS PrevPrice,
+ LAST_VALUE(CurrentPrice) AS CurrentPrice
+FROM price_change_log
+GROUP BY OrderID;
+ 
