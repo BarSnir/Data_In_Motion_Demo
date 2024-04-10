@@ -284,7 +284,7 @@ CREATE TABLE price_change_log (
   PRIMARY KEY (`OrderId`) NOT ENFORCED
 ) WITH (
   'changelog.mode'='append',
-  'kafka.cleanup-policy'='delete',
+  'kafka.cleanup-policy'='compact',
   'value.format' = 'avro-registry',
   'scan.startup.mode' = 'earliest-offset'
 );
